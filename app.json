@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "IJSE - Institute of Software Engineering",
+    "name": "TimeFlow Enterprise",
     "slug": "timeflow-mobile",
     "scheme": "timeflow",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E11C23",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
