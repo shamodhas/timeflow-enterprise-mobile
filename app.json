@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "IJSE - Institute of Software Engineering",
+    "slug": "timeflow-mobile",
+    "scheme": "timeflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E11C23",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TimeFlow uses your location to verify clock-in and clock-out at a work branch."
+        }
+      ],
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

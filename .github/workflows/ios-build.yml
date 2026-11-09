@@ -1,0 +1,51 @@
+name: iOS-ipa-build-expo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: 🎉 Expo iOS Unsigned Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Expo Prebuild
+        run: npx expo prebuild --platform ios
+
+      - name: Build iOS (No Codesign) & Package IPA
+        run: |
+          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1 | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+          mkdir Payload
+          mv ios/build/Build/Products/Release-iphoneos/*.app Payload/
+          zip -qq -r -9 ExpoIpaExport.ipa Payload
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ExpoIpaExport.ipa
+          tag: v1.0
+          overwrite: true
+          body: "React Native Expo unsigned iOS build"
