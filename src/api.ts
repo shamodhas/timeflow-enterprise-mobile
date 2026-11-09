@@ -8,6 +8,9 @@ export interface User {
   fullName: string
   email: string
   role: UserRole
+  tenantId?: string
+  tenantSlug?: string
+  tenantName?: string
 }
 
 export class ApiError extends Error {
@@ -25,6 +28,7 @@ export class ApiError extends Error {
 const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, "")
 const ACCESS_TOKEN_KEY = "timeflow-access-token"
 const REFRESH_TOKEN_KEY = "timeflow-refresh-token"
+const TENANT_SLUG_KEY = "timeflow-tenant-slug"
 const DEFAULT_TIMEOUT_MS = 20000
 
 export const NETWORK_ERROR_CODE = "NETWORK_ERROR"
@@ -48,6 +52,7 @@ const fetchWithTimeout = async (
 
 let accessToken: string | null = null
 let refreshToken: string | null = null
+let activeTenantSlug: string | null = null
 let refreshInFlight: Promise<string | null> | null = null
 let sessionExpiredHandler: (() => void) | null = null
 
@@ -55,6 +60,17 @@ export const setTokens = (access: string | null, refresh: string | null) => {
   accessToken = access
   refreshToken = refresh
 }
+
+export const setActiveTenantSlug = async (slug: string | null) => {
+  activeTenantSlug = slug ? slug.trim().toLowerCase() : null
+  if (activeTenantSlug) {
+    await SecureStore.setItemAsync(TENANT_SLUG_KEY, activeTenantSlug)
+  } else {
+    await SecureStore.deleteItemAsync(TENANT_SLUG_KEY)
+  }
+}
+
+export const getActiveTenantSlug = () => activeTenantSlug
 
 export const setSessionExpiredHandler = (handler: (() => void) | null) => {
   sessionExpiredHandler = handler
@@ -79,12 +95,14 @@ export const persistTokens = async (
 }
 
 export const restoreTokens = async () => {
-  const [access, refresh] = await Promise.all([
+  const [access, refresh, tenantSlug] = await Promise.all([
     SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
-    SecureStore.getItemAsync(REFRESH_TOKEN_KEY)
+    SecureStore.getItemAsync(REFRESH_TOKEN_KEY),
+    SecureStore.getItemAsync(TENANT_SLUG_KEY)
   ])
   setTokens(access, refresh)
-  return { access, refresh }
+  activeTenantSlug = tenantSlug
+  return { access, refresh, tenantSlug }
 }
 
 export const getActiveTokens = () => ({ access: accessToken, refresh: refreshToken })
@@ -155,6 +173,9 @@ export const apiRequest = async <T>(
     headers.set("Content-Type", "application/json")
   }
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`)
+  if (activeTenantSlug && !headers.has("x-workspace-slug")) {
+    headers.set("x-workspace-slug", activeTenantSlug)
+  }
 
   let response: Response
   try {
