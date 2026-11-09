@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import * as Google from "expo-auth-session/providers/google"
 import * as WebBrowser from "expo-web-browser"
 
-import { api, type UserRole } from "../../api"
+import { api, setActiveTenantSlug, type UserRole } from "../../api" from "../../api"
 import { Button, Card, ChoiceRow, Field, Heading, Notice, Page, colors, styles } from "../../ui"
 
 import { messageFrom } from "../../shared/common"
@@ -21,6 +21,7 @@ export function AuthScreen({
   initialError?: string
 }) {
   const [mode, setMode] = useState<"login" | "register">("login")
+  const [tenantSlug, setTenantSlug] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -77,6 +78,9 @@ export function AuthScreen({
     setSuccess("")
     setSubmitting(true)
     try {
+      if (tenantSlug.trim()) {
+        await setActiveTenantSlug(tenantSlug.trim())
+      }
       if (mode === "login") {
         await onLogin(email.trim(), password)
       } else {
@@ -85,7 +89,8 @@ export function AuthScreen({
           fullName: fullName.trim(),
           email: email.trim(),
           password,
-          role
+          role,
+          ...(tenantSlug.trim() ? { tenantSlug: tenantSlug.trim().toLowerCase() } : {})
         })
         setSuccess("Access request submitted. Awaiting administrator approval.")
         setMode("login")
@@ -144,6 +149,13 @@ export function AuthScreen({
               />
             </>
           ) : null}
+          <Field
+            label="Workspace Slug (Optional — Auto-detected)"
+            value={tenantSlug}
+            onChangeText={setTenantSlug}
+            placeholder="e.g. ijse, dialog, mas"
+            autoCapitalize="none"
+          />
           <Field
             label="Corporate email"
             value={email}
